@@ -67,21 +67,31 @@ class Klotski:
         self.id = pid
         self.rows = rows
         self.cols = cols
-        self.exit_cols = tuple(exit_cols)
         self.target = target
         self.game = [Position.from_grid(grid)]
+
+        t = self.game[0].get_piece(target)
+        self.goal_pos = (rows - t.h, min(exit_cols))
 
     def get_current_pos(self):
         return self.game[-1]
 
     def push(self, move):
         new_pos = self.get_current_pos().make_move(move, self.rows, self.cols)
+        if new_pos is None:
+            return False
         self.game.append(new_pos)
+        return True
 
     def pop(self):
-        self.game.pop()
+        if len(self.game) > 1:
+            self.game.pop()
+
+    def manhattan_distance(self):
+        t = self.get_current_pos().get_piece(self.target)
+        r, c = t.pos
+        gr, gc = self.goal_pos
+        return abs(gr - r) + abs(gc - c)
 
     def is_win(self):
-        p = self.get_current_pos().get_piece(self.target)
-        exit_cells = {(self.rows - 1, c) for c in self.exit_cols}
-        return exit_cells <= p.cells_occupied()
+        return self.get_current_pos().get_piece(self.target).pos == self.goal_pos
