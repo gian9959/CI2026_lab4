@@ -1,5 +1,6 @@
-import copy
+import heapq
 from collections import deque
+from itertools import count
 
 from klotski import *
 
@@ -93,10 +94,47 @@ def manhattan_distance(prob):
     gr, gc = prob.goal_pos
     return abs(gr - r) + abs(gc - c)
 
+def a_star(prob):
+    best_pos = {prob.get_current_pos(): 0}
+    tie = count()
+    heap = [(manhattan_distance(prob), 0, next(tie), prob)]
+    expanded_nodes = 0
+
+    while heap:
+        _, g, _, node = heapq.heappop(heap)
+        g = -g
+        if g > best_pos[node.get_current_pos()]:
+            continue
+        if node.is_win():
+            return node, expanded_nodes
+        expanded_nodes += 1
+
+        for p in node.get_current_pieces():
+            for d in DIRECTIONS:
+                move = (p.name, d)
+                next_node = node.clone()
+                if not next_node.push(move):
+                    continue
+                pos = next_node.get_current_pos()
+                new_g = g + 1
+                if new_g < best_pos.get(pos, float("inf")):
+                    best_pos[pos] = new_g
+                    heapq.heappush(heap, (new_g + manhattan_distance(next_node), -new_g, next(tie), next_node))
+
+    return None, expanded_nodes
+
 probs = load_problems("klotski_problems.txt")
 for p in probs.values():
     res, ex = bfs(p)
-    lenght = "NOT FOUND"
+    lenght = 0
     if res:
         lenght = len(res.game) - 1
-    print(f"{p.id} BFS SOLUTION: {lenght}")
+    print(f"{p.id} BFS SOLUTION: {lenght} steps, {ex} explored nodes")
+
+print()
+for p in probs.values():
+    res, ex = a_star(p)
+    lenght = 0
+    if res:
+        lenght = len(res.game) - 1
+    print(f"{p.id} A* SOLUTION: {lenght} steps, {ex} explored nodes")
