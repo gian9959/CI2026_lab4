@@ -30,7 +30,6 @@ class Position:
             h = max(r for r, _ in coords) - r0 + 1
             w = max(c for _, c in coords) - c0 + 1
             pieces.append(Piece(name, h, w, (r0, c0)))
-
         return cls(pieces)
 
     def get_piece(self, name):
@@ -61,7 +60,6 @@ class Position:
         new_pieces = [new_piece if p is piece else p for p in self.pieces]
         return Position(new_pieces)
 
-
 class Klotski:
     def __init__(self, pid, rows, cols, exit_cols, target, grid):
         self.id = pid
@@ -76,6 +74,9 @@ class Klotski:
     def get_current_pos(self):
         return self.game[-1]
 
+    def get_current_pieces(self):
+        return self.get_current_pos().pieces
+
     def push(self, move):
         new_pos = self.get_current_pos().make_move(move, self.rows, self.cols)
         if new_pos is None:
@@ -86,12 +87,6 @@ class Klotski:
     def pop(self):
         if len(self.game) > 1:
             self.game.pop()
-
-    def manhattan_distance(self):
-        t = self.get_current_pos().get_piece(self.target)
-        r, c = t.pos
-        gr, gc = self.goal_pos
-        return abs(gr - r) + abs(gc - c)
 
     def is_win(self):
         return self.get_current_pos().get_piece(self.target).pos == self.goal_pos

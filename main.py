@@ -57,4 +57,10 @@ def load_problems(path):
 
         return problems
 
-load_problems("klotski_problems.txt")
+def manhattan_distance(prob):
+    t = prob.get_current_pos().get_piece(prob.target)
+    r, c = t.pos
+    gr, gc = prob.goal_pos
+    return abs(gr - r) + abs(gc - c)
+
+problems = load_problems("klotski_problems.txt")
