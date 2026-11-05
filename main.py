@@ -1,3 +1,6 @@
+import copy
+from collections import deque
+
 from klotski import *
 
 def load_problems(path):
@@ -53,14 +56,47 @@ def load_problems(path):
             if len(grid) != rows or any(len(r) != cols for r in grid):
                 raise ValueError(f"Grid of problem {pid} has invalid size, should be: {rows}x{cols}")
 
-            problems[pid] = Klotski(pid, rows, cols, exit_cols, target, grid)
+            problems[pid] = Klotski(pid, exit_cols, target, grid)
 
         return problems
 
+
+def bfs(prob):
+    if prob.is_win():
+        return prob, 0
+
+    visited = {prob.get_current_pos()}
+    queue = deque([prob])
+    expanded_nodes = 0
+
+    while queue:
+        node = queue.popleft()
+        expanded_nodes += 1
+
+        for p in node.get_current_pieces():
+            for d in DIRECTIONS:
+                move = (p.name, d)
+                next_node = node.clone()
+                if not next_node.push(move) or next_node.get_current_pos() in visited:
+                    continue
+                visited.add(next_node.get_current_pos())
+
+                if next_node.is_win():
+                    return next_node, expanded_nodes
+                queue.append(next_node)
+
+    return None, expanded_nodes
+
 def manhattan_distance(prob):
-    t = prob.get_current_pos().get_piece(prob.target)
+    t = prob.get_current_pos().get_target_piece()
     r, c = t.pos
     gr, gc = prob.goal_pos
     return abs(gr - r) + abs(gc - c)
 
-problems = load_problems("klotski_problems.txt")
+probs = load_problems("klotski_problems.txt")
+for p in probs.values():
+    res, ex = bfs(p)
+    lenght = "NOT FOUND"
+    if res:
+        lenght = len(res.game) - 1
+    print(f"{p.id} BFS SOLUTION: {lenght}")
